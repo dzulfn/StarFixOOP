@@ -86,3 +86,4 @@ OOP_project/
 | `Level2` | Deep Space — harder challenges |
 | `GameController` | Main menu, game loop, level progression, win/lose |
 | `InvalidSelectionException` | Custom exception for bad user input |
+# StarFix
