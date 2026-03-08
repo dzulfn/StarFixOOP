@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Space Rescue Mission</title>
+    <meta name="description" content="A quiz & survival adventure in outer space — OOP C# group project">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <!-- Star layers -->
+    <div class="stars stars-1"></div>
+    <div class="stars stars-2"></div>
+    <div class="stars stars-3"></div>
+
+    <div id="app">
+        <header id="header">
+            <h1 class="logo">🚀 Space Rescue Mission</h1>
+        </header>
+
+        <!-- Stats bar (hidden on menu) -->
+        <div id="stats-bar" class="hidden">
+            <div class="stat-card" id="player-card">
+                <div class="stat-label">👨‍🚀 <span id="player-name">Astronaut</span></div>
+                <div class="stat-row">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-value" id="player-score">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-icon">❤️</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill lives-bar" id="lives-bar"></div>
+                    </div>
+                    <span class="stat-value" id="lives-text">3/5</span>
+                </div>
+            </div>
+            <div class="stat-card" id="ship-card">
+                <div class="stat-label">🚀 <span id="ship-name">Stellar Voyager</span></div>
+                <div class="stat-row">
+                    <span class="stat-icon">🛡️</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill health-bar" id="health-bar"></div>
+                    </div>
+                    <span class="stat-value" id="health-text">100/100</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main id="content">
+            <div class="card" id="main-card">
+                <h2 id="title" class="card-title">Loading...</h2>
+                <div id="messages" class="messages"></div>
+                <div id="input-area" class="hidden">
+                    <input type="text" id="text-input" class="text-input" placeholder="Enter your name...">
+                    <button class="btn btn-primary" id="input-submit">Submit</button>
+                </div>
+                <div id="inventory-area" class="hidden"></div>
+                <div id="options" class="options"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+
+</html>

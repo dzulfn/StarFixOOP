@@ -1,0 +1,215 @@
+@startuml SpaceRescueMission
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ── Interfaces ──
+interface IRepairable {
+  + IsFullyRepaired : bool <<get>>
+  + Repair(amount : int) : void
+  + GetRepairStatus() : string
+}
+
+interface IDisplayable {
+  + GetStatus() : string
+  + DisplaySummary() : void
+}
+
+' ── Exception ──
+class InvalidSelectionException {
+  - _selection : string
+  + Selection : string <<get>>
+  + InvalidSelectionException()
+  + InvalidSelectionException(selection : string)
+  + InvalidSelectionException(selection : string, inner : Exception)
+  + GetUserMessage() : string
+}
+InvalidSelectionException --|> Exception
+
+' ── Models ──
+class Player {
+  - _name : string
+  - _score : int
+  - _lives : int
+  - _maxLives : int
+  - _inventory : List<Item>
+  + Name : string
+  + Score : int
+  + Lives : int
+  + MaxLives : int
+  + Inventory : IReadOnlyList<Item>
+  + AddScore(points : int) : void
+  + LoseLife() : void
+  + RestoreLives(amount : int) : void
+  + IsAlive() : bool
+  + ResetStats(startingLives : int) : void
+  + AddItem(item : Item) : void
+  + HasUsableItems() : bool
+  + ShowInventory() : void
+  + UseItem(index : int, spaceship : Spaceship) : bool
+  + GetStatus() : string
+  + DisplaySummary() : void
+}
+Player ..|> IDisplayable
+Player o-- "0..*" Item : inventory
+
+class Spaceship {
+  - _name : string
+  - _health : int
+  - _fuelLevel : int
+  - _maxHealth : int
+  - _maxFuel : int
+  + Name : string
+  + Health : int
+  + FuelLevel : int
+  + MaxHealth : int
+  + MaxFuel : int
+  + IsFullyRepaired : bool
+  + Repair(amount : int) : void
+  + GetRepairStatus() : string
+  + TakeDamage(damage : int) : void
+  + UseFuel(amount : int) : bool
+  + Refuel(amount : int) : void
+  + IsOperational() : bool
+  + GetStatus() : string
+  + DisplaySummary() : void
+}
+Spaceship ..|> IRepairable
+Spaceship ..|> IDisplayable
+
+class Question {
+  - _text : string
+  - _options : string[]
+  - _correctIndex : int
+  - _points : int
+  + Text : string
+  + Options : string[]
+  + CorrectIndex : int
+  + Points : int
+  + DisplayQuestion() : void
+  + CheckAnswer(answerIndex : int) : bool
+  + GetCorrectAnswerText() : string
+}
+
+' ── Items ──
+abstract class Item {
+  - _name : string
+  - _description : string
+  - _isConsumed : bool
+  + Name : string
+  + Description : string
+  + IsConsumed : bool
+  + {abstract} Use(player : Player, spaceship : Spaceship) : void
+  + Use(player : Player) : void
+  + GetInfo() : string
+}
+
+class OxygenTank {
+  - _livesRestored : int
+  + LivesRestored : int
+  + Use(player : Player, spaceship : Spaceship) : void
+  + GetInfo() : string
+}
+OxygenTank --|> Item
+
+class RepairKit {
+  - _repairAmount : int
+  + RepairAmount : int
+  + Use(player : Player, spaceship : Spaceship) : void
+  + GetInfo() : string
+}
+RepairKit --|> Item
+
+' ── Challenges ──
+abstract class Challenge {
+  - _name : string
+  - _difficulty : int
+  - _scoreReward : int
+  + Name : string
+  + Difficulty : int
+  + ScoreReward : int
+  + {abstract} Execute(player : Player, spaceship : Spaceship) : bool
+  + GetDescription() : string
+}
+
+class AsteroidField {
+  - _asteroidCount : int
+  - _fuelCost : int
+  + AsteroidCount : int
+  + FuelCost : int
+  + Execute(player : Player, spaceship : Spaceship) : bool
+  + GetDescription() : string
+}
+AsteroidField --|> Challenge
+
+class AlienEncounter {
+  - _question : Question
+  - _maxAttempts : int
+  + Question : Question
+  + MaxAttempts : int
+  + Execute(player : Player, spaceship : Spaceship) : bool
+  + GetDescription() : string
+}
+AlienEncounter --|> Challenge
+AlienEncounter o-- Question
+
+' ── Levels ──
+class Level {
+  - _levelNumber : int
+  - _name : string
+  - _description : string
+  - _isCompleted : bool
+  - _challengesPassed : int
+  - _questions : List<Question>
+  - _challenges : List<Challenge>
+  - _items : List<Item>
+  + LevelNumber : int
+  + Name : string
+  + Description : string
+  + IsCompleted : bool
+  + ChallengesPassed : int
+  + Questions : IReadOnlyList<Question>
+  + Challenges : IReadOnlyList<Challenge>
+  + Items : IReadOnlyList<Item>
+  + LoadContent() : void
+  + Start(player : Player, spaceship : Spaceship) : void
+  + CheckCompletion(player : Player, spaceship : Spaceship) : bool
+  + GetSummary() : string
+  + GetStatus() : string
+  + DisplaySummary() : void
+}
+Level ..|> IDisplayable
+Level o-- "0..*" Question
+Level o-- "0..*" Challenge
+Level o-- "0..*" Item
+
+class Level1 {
+  + LoadContent() : void
+  + Start(player : Player, spaceship : Spaceship) : void
+}
+Level1 --|> Level
+
+class Level2 {
+  + LoadContent() : void
+  + Start(player : Player, spaceship : Spaceship) : void
+}
+Level2 --|> Level
+
+' ── Controller ──
+class GameController {
+  - _player : Player
+  - _spaceship : Spaceship
+  - _levels : List<Level>
+  - _isRunning : bool
+  + Player : Player
+  + Spaceship : Spaceship
+  + Levels : IReadOnlyList<Level>
+  + IsRunning : bool
+  + Run() : void
+  + ShowMainMenu() : void
+}
+GameController o-- Player
+GameController o-- Spaceship
+GameController o-- "0..*" Level
+
+@enduml
