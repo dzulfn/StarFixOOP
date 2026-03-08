@@ -87,3 +87,4 @@ OOP_project/
 | `GameController` | Main menu, game loop, level progression, win/lose |
 | `InvalidSelectionException` | Custom exception for bad user input |
 # StarFix
+# StarFix
