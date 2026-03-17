@@ -78,3 +78,4 @@ docs/
 | Collections | `List<Item>` and `List<Challenge>` — exposed as `IReadOnlyList<T>` where needed |
 | Exception handling | `InvalidSelectionException` thrown on bad quiz input, caught in controller |
 # StarFixOOP
+# StarFixOOP
