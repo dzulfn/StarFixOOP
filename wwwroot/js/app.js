@@ -1,4 +1,4 @@
-// ══ Space Rescue Mission — Client ══
+// ══ StarFix — Client ══
 
 const API = {
     state: '/api/state',

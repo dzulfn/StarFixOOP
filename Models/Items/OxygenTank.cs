@@ -1,6 +1,5 @@
-namespace SpaceRescueMission.Models.Items
+namespace StarFix.Models.Items
 {
-    // Oxygen tank - restores player lives (inherits from Item)
     public class OxygenTank : Item
     {
         private int _livesRestored;
@@ -17,18 +16,11 @@ namespace SpaceRescueMission.Models.Items
             LivesRestored = livesRestored;
         }
 
-        // Override - restores lives when used (polymorphism)
         public override void Use(Player player, Spaceship spaceship)
         {
-            if (IsConsumed)
-            {
-                Console.WriteLine("  This oxygen tank has already been used.");
-                return;
-            }
-
+            if (IsConsumed) return;
             player.RestoreLives(_livesRestored);
             IsConsumed = true;
-            Console.WriteLine("  🫁 Used Oxygen Tank! Restored " + _livesRestored + " life.");
         }
 
         public override string GetInfo()

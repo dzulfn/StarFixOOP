@@ -1,4 +1,4 @@
-@startuml SpaceRescueMission
+@startuml StarFix
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
@@ -12,7 +12,6 @@ interface IRepairable {
 
 interface IDisplayable {
   + GetStatus() : string
-  + DisplaySummary() : void
 }
 
 ' ── Exception ──
@@ -45,10 +44,7 @@ class Player {
   + ResetStats(startingLives : int) : void
   + AddItem(item : Item) : void
   + HasUsableItems() : bool
-  + ShowInventory() : void
-  + UseItem(index : int, spaceship : Spaceship) : bool
   + GetStatus() : string
-  + DisplaySummary() : void
 }
 Player ..|> IDisplayable
 Player o-- "0..*" Item : inventory
@@ -56,23 +52,16 @@ Player o-- "0..*" Item : inventory
 class Spaceship {
   - _name : string
   - _health : int
-  - _fuelLevel : int
   - _maxHealth : int
-  - _maxFuel : int
   + Name : string
   + Health : int
-  + FuelLevel : int
   + MaxHealth : int
-  + MaxFuel : int
   + IsFullyRepaired : bool
   + Repair(amount : int) : void
   + GetRepairStatus() : string
   + TakeDamage(damage : int) : void
-  + UseFuel(amount : int) : bool
-  + Refuel(amount : int) : void
   + IsOperational() : bool
   + GetStatus() : string
-  + DisplaySummary() : void
 }
 Spaceship ..|> IRepairable
 Spaceship ..|> IDisplayable
@@ -86,7 +75,6 @@ class Question {
   + Options : string[]
   + CorrectIndex : int
   + Points : int
-  + DisplayQuestion() : void
   + CheckAnswer(answerIndex : int) : bool
   + GetCorrectAnswerText() : string
 }
@@ -100,7 +88,6 @@ abstract class Item {
   + Description : string
   + IsConsumed : bool
   + {abstract} Use(player : Player, spaceship : Spaceship) : void
-  + Use(player : Player) : void
   + GetInfo() : string
 }
 
@@ -132,16 +119,6 @@ abstract class Challenge {
   + GetDescription() : string
 }
 
-class AsteroidField {
-  - _asteroidCount : int
-  - _fuelCost : int
-  + AsteroidCount : int
-  + FuelCost : int
-  + Execute(player : Player, spaceship : Spaceship) : bool
-  + GetDescription() : string
-}
-AsteroidField --|> Challenge
-
 class AlienEncounter {
   - _question : Question
   - _maxAttempts : int
@@ -160,7 +137,6 @@ class Level {
   - _description : string
   - _isCompleted : bool
   - _challengesPassed : int
-  - _questions : List<Question>
   - _challenges : List<Challenge>
   - _items : List<Item>
   + LevelNumber : int
@@ -168,48 +144,46 @@ class Level {
   + Description : string
   + IsCompleted : bool
   + ChallengesPassed : int
-  + Questions : IReadOnlyList<Question>
   + Challenges : IReadOnlyList<Challenge>
   + Items : IReadOnlyList<Item>
   + LoadContent() : void
-  + Start(player : Player, spaceship : Spaceship) : void
   + CheckCompletion(player : Player, spaceship : Spaceship) : bool
   + GetSummary() : string
   + GetStatus() : string
-  + DisplaySummary() : void
 }
 Level ..|> IDisplayable
-Level o-- "0..*" Question
 Level o-- "0..*" Challenge
 Level o-- "0..*" Item
 
 class Level1 {
   + LoadContent() : void
-  + Start(player : Player, spaceship : Spaceship) : void
 }
 Level1 --|> Level
 
 class Level2 {
   + LoadContent() : void
-  + Start(player : Player, spaceship : Spaceship) : void
 }
 Level2 --|> Level
 
 ' ── Controller ──
-class GameController {
+class WebGameController {
+  - _phase : GamePhase
   - _player : Player
   - _spaceship : Spaceship
   - _levels : List<Level>
-  - _isRunning : bool
-  + Player : Player
-  + Spaceship : Spaceship
-  + Levels : IReadOnlyList<Level>
-  + IsRunning : bool
-  + Run() : void
-  + ShowMainMenu() : void
+  - _currentLevelIndex : int
+  - _currentChallengeIndex : int
+  - _challengesPassed : int
+  - _itemsAwarded : int
+  - _levelRetryAttempts : int
+  - _invalidAnswerAttempts : int
+  - _messages : List<string>
+  - _lastChallengeSuccess : bool
+  + GetState() : GameStateResponse
+  + ProcessAction(action : string, value : string) : GameStateResponse
 }
-GameController o-- Player
-GameController o-- Spaceship
-GameController o-- "0..*" Level
+WebGameController o-- Player
+WebGameController o-- Spaceship
+WebGameController o-- "0..*" Level
 
 @enduml

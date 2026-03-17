@@ -1,14 +1,11 @@
-namespace SpaceRescueMission.Models.Items
+namespace StarFix.Models.Items
 {
-    // Abstract base class for all items (inheritance + polymorphism)
     public abstract class Item
     {
-        // Private fields
         private string _name;
         private string _description;
         private bool _isConsumed;
 
-        // Properties with validation
         public string Name
         {
             get { return _name; }
@@ -24,11 +21,7 @@ namespace SpaceRescueMission.Models.Items
         public string Description
         {
             get { return _description; }
-            protected set
-            {
-                if (value == null) _description = "";
-                else _description = value;
-            }
+            protected set { _description = value ?? ""; }
         }
 
         public bool IsConsumed
@@ -37,7 +30,6 @@ namespace SpaceRescueMission.Models.Items
             protected set { _isConsumed = value; }
         }
 
-        // Constructor
         protected Item(string name, string description)
         {
             Name = name;
@@ -45,16 +37,8 @@ namespace SpaceRescueMission.Models.Items
             _isConsumed = false;
         }
 
-        // Abstract method - each item type has different effect (polymorphism)
         public abstract void Use(Player player, Spaceship spaceship);
 
-        // Overload for when no spaceship needed
-        public void Use(Player player)
-        {
-            Use(player, null!);
-        }
-
-        // Virtual method
         public virtual string GetInfo()
         {
             string status = _isConsumed ? " [USED]" : "";

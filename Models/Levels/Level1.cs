@@ -1,9 +1,8 @@
-using SpaceRescueMission.Models.Challenges;
-using SpaceRescueMission.Models.Items;
+using StarFix.Models.Challenges;
+using StarFix.Models.Items;
 
-namespace SpaceRescueMission.Models.Levels
+namespace StarFix.Models.Levels
 {
-    // Level 1: Earth Orbit - easier questions
     public class Level1 : Level
     {
         public Level1()
@@ -15,7 +14,6 @@ namespace SpaceRescueMission.Models.Levels
         {
             base.LoadContent();
 
-            // Add 5 quiz questions
             ChallengesList.Add(new AlienEncounter(
                 new Question("What is the star at the center of our solar system?",
                     new string[] { "Moon", "Sun", "Earth", "Mars" }, 1, 10),
@@ -41,17 +39,8 @@ namespace SpaceRescueMission.Models.Levels
                     new string[] { "Mars", "Earth", "Saturn", "Venus" }, 0, 15),
                 difficulty: 3, scoreReward: 25, maxAttempts: 3));
 
-            // Reward items
             ItemsList.Add(new OxygenTank(livesRestored: 1));
             ItemsList.Add(new RepairKit(repairAmount: 20));
-        }
-
-        public override void Start(Player player, Spaceship spaceship)
-        {
-            Console.WriteLine();
-            Console.WriteLine("  You are orbiting Earth. The rescue signal is coming from deep space...");
-            Console.WriteLine();
-            base.Start(player, spaceship);
         }
     }
 }

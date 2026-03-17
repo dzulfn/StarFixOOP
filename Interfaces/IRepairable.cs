@@ -1,6 +1,5 @@
-namespace SpaceRescueMission.Interfaces
+namespace StarFix.Interfaces
 {
-    // Interface for objects that can be repaired (e.g. Spaceship)
     public interface IRepairable
     {
         bool IsFullyRepaired { get; }

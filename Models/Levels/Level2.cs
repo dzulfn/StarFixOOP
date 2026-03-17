@@ -1,9 +1,8 @@
-using SpaceRescueMission.Models.Challenges;
-using SpaceRescueMission.Models.Items;
+using StarFix.Models.Challenges;
+using StarFix.Models.Items;
 
-namespace SpaceRescueMission.Models.Levels
+namespace StarFix.Models.Levels
 {
-    // Level 2: Deep Space - harder questions
     public class Level2 : Level
     {
         public Level2()
@@ -15,7 +14,6 @@ namespace SpaceRescueMission.Models.Levels
         {
             base.LoadContent();
 
-            // Add 5 quiz questions
             ChallengesList.Add(new AlienEncounter(
                 new Question("What are the tiny sparkling lights we see in the night sky?",
                     new string[] { "Birds", "Stars", "Planes", "Clouds" }, 1, 15),
@@ -41,18 +39,9 @@ namespace SpaceRescueMission.Models.Levels
                     new string[] { "Mercury", "Saturn", "Earth", "Mars" }, 1, 20),
                 difficulty: 6, scoreReward: 40, maxAttempts: 2));
 
-            // Reward items
             ItemsList.Add(new OxygenTank(livesRestored: 1));
             ItemsList.Add(new RepairKit(repairAmount: 20));
             ItemsList.Add(new RepairKit(repairAmount: 20));
-        }
-
-        public override void Start(Player player, Spaceship spaceship)
-        {
-            Console.WriteLine();
-            Console.WriteLine("  You have left Earth orbit. Deep space surrounds you...");
-            Console.WriteLine();
-            base.Start(player, spaceship);
         }
     }
 }

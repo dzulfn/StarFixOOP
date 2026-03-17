@@ -1,11 +1,11 @@
-using SpaceRescueMission.Models;
-using SpaceRescueMission.Models.Challenges;
-using SpaceRescueMission.Models.Items;
-using SpaceRescueMission.Models.Levels;
+using StarFix.Exceptions;
+using StarFix.Models;
+using StarFix.Models.Challenges;
+using StarFix.Models.Items;
+using StarFix.Models.Levels;
 
-namespace SpaceRescueMission.Controllers
+namespace StarFix.Controllers
 {
-    // Game phases - tracks where the player is in the game
     public enum GamePhase
     {
         MainMenu,
@@ -20,7 +20,7 @@ namespace SpaceRescueMission.Controllers
         GameLost
     }
 
-    // Classes for sending data to the browser as JSON
+    // --- DTOs sent to the browser as JSON ---
 
     public class GameStateResponse
     {
@@ -122,10 +122,13 @@ namespace SpaceRescueMission.Controllers
         }
     }
 
-    // Main game controller - manages the game using a state machine
+    // The controller is basically a state machine. Each GamePhase maps to a
+    // screen the player sees, and ProcessAction moves between phases based on
+    // what button they click. I chose this pattern because the browser sends
+    // one action at a time and waits for the new state — it maps cleanly to
+    // a simple switch-based state machine.
     public class WebGameController
     {
-        // Game state variables
         private GamePhase _phase = GamePhase.MainMenu;
         private Player _player;
         private Spaceship _spaceship;
@@ -135,19 +138,15 @@ namespace SpaceRescueMission.Controllers
         private int _challengesPassed;
         private int _itemsAwarded;
 
-        // Retry counter per level
         private int _levelRetryAttempts;
         private const int MaxLevelRetryAttempts = 3;
 
-        // Invalid answer counter per question
         private int _invalidAnswerAttempts;
         private const int MaxInvalidAttempts = 3;
 
-        // For showing messages after each question
         private List<string> _messages = new List<string>();
         private bool _lastChallengeSuccess;
 
-        // Constructor
         public WebGameController()
         {
             _player = new Player("Astronaut");
@@ -156,7 +155,6 @@ namespace SpaceRescueMission.Controllers
             InitializeLevels();
         }
 
-        // Set up the levels
         private void InitializeLevels()
         {
             _levels.Clear();
@@ -166,54 +164,62 @@ namespace SpaceRescueMission.Controllers
                 level.LoadContent();
         }
 
-        // Get current game state (called by API)
         public GameStateResponse GetState()
         {
             return BuildResponse();
         }
 
-        // Process a player action (called by API)
+        // Each action from the browser is routed to the handler for the
+        // current phase. InvalidSelectionException is caught here so that
+        // bad input shows a message instead of crashing.
         public GameStateResponse ProcessAction(string action, string value)
         {
-            switch (_phase)
+            try
             {
-                case GamePhase.MainMenu:
-                    HandleMainMenu(action);
-                    break;
-                case GamePhase.EnteringName:
-                    HandleEnteringName(action, value);
-                    break;
-                case GamePhase.LevelIntro:
-                    HandleLevelIntro(action);
-                    break;
-                case GamePhase.QuizChallenge:
-                    HandleQuizAction(action, value);
-                    break;
-                case GamePhase.ChallengeResult:
-                    HandleChallengeResult(action, value);
-                    break;
-                case GamePhase.LevelComplete:
-                case GamePhase.LevelFailed:
-                    HandleLevelResult(action);
-                    break;
-                case GamePhase.BetweenLevels:
-                    HandleBetweenLevels(action);
-                    break;
-                case GamePhase.GameWon:
-                case GamePhase.GameLost:
-                    HandleGameEnd(action);
-                    break;
+                switch (_phase)
+                {
+                    case GamePhase.MainMenu:
+                        HandleMainMenu(action);
+                        break;
+                    case GamePhase.EnteringName:
+                        HandleEnteringName(action, value);
+                        break;
+                    case GamePhase.LevelIntro:
+                        HandleLevelIntro(action);
+                        break;
+                    case GamePhase.QuizChallenge:
+                        HandleQuizAction(action, value);
+                        break;
+                    case GamePhase.ChallengeResult:
+                        HandleChallengeResult(action, value);
+                        break;
+                    case GamePhase.LevelComplete:
+                    case GamePhase.LevelFailed:
+                        HandleLevelResult(action);
+                        break;
+                    case GamePhase.BetweenLevels:
+                        HandleBetweenLevels(action);
+                        break;
+                    case GamePhase.GameWon:
+                    case GamePhase.GameLost:
+                        HandleGameEnd(action);
+                        break;
+                }
+            }
+            catch (InvalidSelectionException ex)
+            {
+                _messages.Clear();
+                _messages.Add("⚠️ " + ex.GetUserMessage());
             }
 
             return BuildResponse();
         }
 
-        // --- Action handlers ---
-
         private void HandleMainMenu(string action)
         {
             if (action == "start_game")
             {
+                _messages.Clear();
                 _phase = GamePhase.EnteringName;
             }
         }
@@ -270,34 +276,28 @@ namespace SpaceRescueMission.Controllers
             var quiz = level.Challenges[_currentChallengeIndex] as AlienEncounter;
             if (quiz == null) return;
 
-            // Check for invalid (non-numeric or out-of-range) input
+            // Throw InvalidSelectionException for non-numeric or out-of-range input
             if (!int.TryParse(value, out int answer) || answer < 1 || answer > quiz.Question.Options.Length)
             {
                 _invalidAnswerAttempts++;
-                _messages.Clear();
 
                 if (_invalidAnswerAttempts >= MaxInvalidAttempts)
                 {
-                    // Too many invalid attempts - back to main menu
+                    _messages.Clear();
                     _messages.Add("⚠️ Too many invalid inputs. Returning to Main Menu.");
                     ResetToMainMenu();
                     return;
                 }
 
                 int left = MaxInvalidAttempts - _invalidAnswerAttempts;
-                _messages.Add("⚠️ Invalid answer. Attempts left: " + left);
-                // Stay in QuizChallenge phase - don't change _phase
-                return;
+                throw new InvalidSelectionException(value ?? "");
             }
 
-            // Valid answer - reset invalid counter
             _invalidAnswerAttempts = 0;
             _messages.Clear();
 
-            // Check if answer is correct
             if (quiz.Question.CheckAnswer(answer))
             {
-                // Correct answer - light damage (-5)
                 _spaceship.TakeDamage(5);
                 _player.AddScore(quiz.ScoreReward);
                 _messages.Add("☄️ Space debris grazes the ship (-5 hull)");
@@ -310,7 +310,6 @@ namespace SpaceRescueMission.Controllers
             }
             else
             {
-                // Wrong answer - heavy damage (-30)
                 _spaceship.TakeDamage(30);
                 _player.LoseLife();
                 _messages.Add("☄️ Heavy debris hits the ship! (-30 hull)");
@@ -326,7 +325,6 @@ namespace SpaceRescueMission.Controllers
 
         private void HandleChallengeResult(string action, string value)
         {
-            // Handle using items
             if (action == "use_item" && int.TryParse(value, out int idx))
             {
                 int i = idx - 1;
@@ -362,7 +360,6 @@ namespace SpaceRescueMission.Controllers
 
             if (action != "continue") return;
 
-            // Check if player or ship is dead -> GameLost
             if (!_player.IsAlive() || !_spaceship.IsOperational())
             {
                 _messages.Clear();
@@ -375,7 +372,6 @@ namespace SpaceRescueMission.Controllers
                 return;
             }
 
-            // Move to next challenge
             _invalidAnswerAttempts = 0;
             _currentChallengeIndex++;
             var level = _levels[_currentLevelIndex];
@@ -400,7 +396,6 @@ namespace SpaceRescueMission.Controllers
 
                 _levelRetryAttempts++;
 
-                // Too many retries - send back to main menu
                 if (_levelRetryAttempts > MaxLevelRetryAttempts)
                 {
                     _messages.Clear();
@@ -410,7 +405,6 @@ namespace SpaceRescueMission.Controllers
                     return;
                 }
 
-                // Checkpoint - restart the current level
                 _player.ResetStats(3);
                 _spaceship = new Spaceship("Stellar Voyager");
 
@@ -434,7 +428,6 @@ namespace SpaceRescueMission.Controllers
 
             if (action != "continue") return;
 
-            // Level complete - reset retry counter and move on
             _levelRetryAttempts = 0;
             _currentLevelIndex++;
             if (_currentLevelIndex >= _levels.Count)
@@ -463,25 +456,23 @@ namespace SpaceRescueMission.Controllers
         private void HandleGameEnd(string action)
         {
             if (action == "main_menu")
-            {
                 ResetToMainMenu();
-            }
         }
 
-        // Reset everything and go to main menu
         private void ResetToMainMenu()
         {
             _phase = GamePhase.MainMenu;
             _player = new Player("Astronaut");
             _spaceship = new Spaceship("Stellar Voyager");
+            _currentLevelIndex = 0;
+            _currentChallengeIndex = 0;
+            _challengesPassed = 0;
+            _itemsAwarded = 0;
             _levelRetryAttempts = 0;
             _invalidAnswerAttempts = 0;
             InitializeLevels();
         }
 
-        // --- Helper methods ---
-
-        // Give the player an item as a reward for correct answer
         private void TryAwardItem()
         {
             var level = _levels[_currentLevelIndex];
@@ -495,7 +486,6 @@ namespace SpaceRescueMission.Controllers
             }
         }
 
-        // Check if player passed enough challenges
         private void CheckAndSetLevelResult()
         {
             var level = _levels[_currentLevelIndex];
@@ -522,7 +512,7 @@ namespace SpaceRescueMission.Controllers
             }
         }
 
-        // --- Build the JSON response for the browser ---
+        // --- Build JSON response ---
 
         private GameStateResponse BuildResponse()
         {
@@ -534,7 +524,12 @@ namespace SpaceRescueMission.Controllers
             switch (_phase)
             {
                 case GamePhase.MainMenu:
-                    resp.Title = "SPACE RESCUE MISSION";
+                    resp.Title = "STARFIX";
+                    if (_messages.Count > 0)
+                    {
+                        resp.Messages.AddRange(_messages);
+                        resp.Messages.Add("");
+                    }
                     resp.Messages.Add("A quiz & survival adventure in outer space.");
                     resp.Messages.Add("Answer questions, manage your ship, and rescue the stranded crew!");
                     resp.Options.Add(new OptionInfo("start_game", "Start New Game", "primary"));
@@ -569,17 +564,19 @@ namespace SpaceRescueMission.Controllers
                     {
                         resp.Options.Add(new OptionInfo("answer:" + (i + 1), quiz.Question.Options[i], "secondary"));
                     }
+                    // Show warning if player had invalid attempts
+                    if (_invalidAnswerAttempts > 0)
+                    {
+                        int left = MaxInvalidAttempts - _invalidAnswerAttempts;
+                        resp.Messages.Add("");
+                        resp.Messages.Add("⚠️ Invalid attempts left: " + left);
+                    }
                     break;
 
                 case GamePhase.ChallengeResult:
-                    if (_lastChallengeSuccess)
-                        resp.Title = "Correct!";
-                    else
-                        resp.Title = "Wrong!";
-
+                    resp.Title = _lastChallengeSuccess ? "Correct!" : "Wrong!";
                     resp.Messages.AddRange(_messages);
 
-                    // Show usable items as buttons
                     if (_player.HasUsableItems())
                     {
                         resp.Messages.Add("");
@@ -600,10 +597,8 @@ namespace SpaceRescueMission.Controllers
 
                     var curLevel = _levels[_currentLevelIndex];
                     bool moreQuestions = _currentChallengeIndex + 1 < curLevel.Challenges.Count;
-                    if (moreQuestions)
-                        resp.Options.Add(new OptionInfo("continue", "Next Question", "primary"));
-                    else
-                        resp.Options.Add(new OptionInfo("continue", "Continue", "primary"));
+                    resp.Options.Add(new OptionInfo("continue",
+                        moreQuestions ? "Next Question" : "Continue", "primary"));
                     break;
 
                 case GamePhase.LevelComplete:

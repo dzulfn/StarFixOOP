@@ -1,6 +1,5 @@
-namespace SpaceRescueMission.Models.Items
+namespace StarFix.Models.Items
 {
-    // Repair kit - repairs spaceship hull (inherits from Item)
     public class RepairKit : Item
     {
         private int _repairAmount;
@@ -17,30 +16,13 @@ namespace SpaceRescueMission.Models.Items
             RepairAmount = repairAmount;
         }
 
-        // Override - repairs ship when used (polymorphism)
         public override void Use(Player player, Spaceship spaceship)
         {
-            if (IsConsumed)
-            {
-                Console.WriteLine("  This repair kit has already been used.");
-                return;
-            }
-
-            if (spaceship == null)
-            {
-                Console.WriteLine("  No spaceship available to repair.");
-                return;
-            }
-
-            if (spaceship.IsFullyRepaired)
-            {
-                Console.WriteLine("  " + spaceship.Name + " is already fully repaired! Kit saved.");
-                return;
-            }
+            if (IsConsumed) return;
+            if (spaceship.IsFullyRepaired) return;
 
             spaceship.Repair(_repairAmount);
             IsConsumed = true;
-            Console.WriteLine("  🔧 Used Repair Kit! Repaired " + _repairAmount + " hull points.");
         }
 
         public override string GetInfo()

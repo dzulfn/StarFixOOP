@@ -1,4 +1,4 @@
-namespace SpaceRescueMission.Exceptions
+namespace StarFix.Exceptions
 {
     // Custom exception for invalid menu selections
     public class InvalidSelectionException : Exception

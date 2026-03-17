@@ -1,14 +1,11 @@
-namespace SpaceRescueMission.Models.Challenges
+namespace StarFix.Models.Challenges
 {
-    // Abstract base class for all challenges (inheritance + polymorphism)
     public abstract class Challenge
     {
-        // Private fields
         private string _name;
         private int _difficulty;
         private int _scoreReward;
 
-        // Properties with validation
         public string Name
         {
             get { return _name; }
@@ -35,14 +32,9 @@ namespace SpaceRescueMission.Models.Challenges
         public int ScoreReward
         {
             get { return _scoreReward; }
-            protected set
-            {
-                if (value > 0) _scoreReward = value;
-                else _scoreReward = 10;
-            }
+            protected set { _scoreReward = value > 0 ? value : 10; }
         }
 
-        // Constructor
         protected Challenge(string name, int difficulty, int scoreReward = 20)
         {
             Name = name;
@@ -50,10 +42,8 @@ namespace SpaceRescueMission.Models.Challenges
             ScoreReward = scoreReward;
         }
 
-        // Abstract method - each subclass has different behaviour (polymorphism)
         public abstract bool Execute(Player player, Spaceship spaceship);
 
-        // Virtual method - can be overridden
         public virtual string GetDescription()
         {
             return _name + " (Difficulty: " + _difficulty + "/10, Reward: " + _scoreReward + " pts)";
